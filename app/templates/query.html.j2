@@ -1,0 +1,460 @@
+{% extends "base.html.j2" %}
+{% block title %}APA site query{% endblock %}
+{% block body %}
+<!-- Naming convention: ID:all-lower variable: camelCase enum: ALL_UPPER -->
+<!-- <h3 class="mb-2">Query APA sites</h3> -->
+<div class="bg-light p-2 mb-3">
+  <form id="APA-simple-query-form" onsubmit="return submitSimpleQuery()">
+    <div class="d-flex col-6 offset-3 my-2">
+      <input class="form-control me-2" type="text" name="searchString" id="simple-search-input" placeholder="ENSG00000141510 / MKI67 / chr1:1-1000000 / GO:0005634" pattern="\S+">
+      <button class="btn btn-outline-primary me-2" type="submit" title="Search" id="simple-search-button"><i class="fas fa-search"></i></button>
+      <button class="btn btn-outline-secondary" type="button" title="Advanced search options" id="advanced-search-collapse-button" data-bs-toggle="collapse" data-bs-target="#advanced-search-inputs" aria-expanded="false" aria-controls="advanced-search-inputs"><i class="fas fa-angle-down"></i></button>
+    </div>
+  </form>
+  <div class="collapse" id="advanced-search-inputs">
+    <form id="APA-query-form" onsubmit="return submitAdvancedQuery()">
+      <div class="row g-3 mb-3 align-items-end">
+        <div class="col-4">
+          <label class="form-label">ID</label>
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="IDType" id="ID-is-gene-radio-button" value="GENE" checked>
+              <label class="form-check-label" for="ID-is-gene-radio-button">Gene ID</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="IDType" id="ID-is-APA-radio-button" value="APA">
+              <label class="form-check-label" for="ID-is-APA-radio-button">{% if dataset == "QAPA" %}APA ID{% else %}Transcript ID{% endif %}</label> <!-- Hack: In DaPars dataset, APA ID column is used as transcript ID (NM_...). -->
+            </div>
+            {% if dataset == "QAPA" %}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="IDType" id="ID-is-transcript-radio-button" value="TRANSCRIPT" disabled>
+              <label class="form-check-label" for="ID-is-transcript-radio-button">Transcript ID</label>
+            </div>
+            {% endif %}
+          </div>
+          <input class="form-control" type="text" name="ID" id="ID-input" pattern="\S+">
+        </div>
+        <div class="col-4">
+          <label class="form-label" for="gene-set-ID-input">Gene set ID</label>
+          <input class="form-control" type="text" name="geneSetID" id="gene-set-ID-input" pattern="\S+">
+        </div>
+      </div>
+      <div class="row g-3 mb-3 align-items-end">
+        <div class="col">
+          <label class="form-label" for="chromosome-select">Chromosome</label>
+          <select class="form-select" name="chromosome" id="chromosome-select">
+            <option value="" selected>(Select chromosome first to specify location)</option>
+            {% for chrom in range(1, 23) -%}
+            <option value="{{ chrom }}">{{ chrom }}</option>
+            {% endfor %}
+            <option value="X">X</option>
+            <option value="Y">Y</option>
+          </select>
+        </div>
+        <div class="col">
+          <fieldset id="spatial-range-fieldset" disabled>
+            <label class="form-label">Spatial range</label>
+            <div class="mb-2">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="regionType" id="UTR-radio-button" value="UTR">
+                <label class="form-check-label" for="UTR-radio-button">3'UTR</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="regionType" id="terminal-radio-button" value="UTR_TERMINAL" checked>
+                <label class="form-check-label" for="terminal-radio-button">3' terminal</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="regionType" id="whole-gene-radio-button" value="WHOLE_GENE" disabled>
+                <label class="form-check-label" for="whole-gene-radio-button">Gene</label>
+              </div>
+              {% if dataset == "QAPA" %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="regionType" id="last-exon-radio-button" value="LAST_EXON">
+                <label class="form-check-label" for="last-exon-radio-button">Last exon</label>
+              </div>
+              {% endif %}
+            </div>
+            <div class="input-group">
+              <input class="form-control" type="number" name="regionStart" id="region-start-input" min="1">
+              <span class="input-group-text">-</span>
+              <input class="form-control" type="number" name="regionStop" id="region-stop-input" min="1">
+            </div>
+          </fieldset>
+        </div>
+        {% if dataset == "QAPA" %}
+        <div class="col">
+          <label class="form-label" for="site-type-select">APA site type</label>
+          <select class="form-select" name="siteType" id="site-type-select">
+            <option value="" selected></option>
+            <option value="PROXIMAL">Proximal</option>
+            <option value="DISTAL">Distal</option>
+            <option value="SINGLE">Single (no APA)</option>
+          </select>
+        </div>
+        {% else %}
+        <div class="col">
+          <label class="form-label" for="disease-select">Sample used in analysis</label>
+          <select class="form-select" name="disease" id="disease-select">
+            {% for disease in ["AA","AL","ALL","AML","APL","B-ALL","MDS","MPAL","normal","T-ALL","T-LBL"] -%}
+            <option value="{{ disease }}" {% if disease == "AML" %}selected{% else %}disabled{% endif %}>{{ disease }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+      <div class="col-4 mb-3">
+        <label class="form-label" for="ID-list-file-upload-input">Or upload an ID list</label>
+        <div class="d-flex">
+          <input class="form-control me-2" type="file" id="ID-list-file-upload-input" name="IDListFile" accept="text/plain"><!-- No "name" field because it will be POSTed separately if non-empty -->
+          <button type="button" class="btn btn-outline-secondary me-2" onclick="$('#ID-list-file-upload-input').val('')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Sort</label>
+        <div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="orderBy" id="default-order-button" value="DEFAULT" checked>
+            <label class="form-check-label" for="default-order-button">Default</label>
+          </div>
+          {% if dataset == "QAPA" %}
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="orderBy" id="gene-ID-order-button" value="GENE_AND_NUMBER">
+            <label class="form-check-label" for="gene-ID-order-button">By gene and APA number</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="orderBy" id="transcript-ID-order-button" value="TRANSCRIPT_ID" disabled>
+            <label class="form-check-label" for="transcript-ID-order-button">By transcript ID</label>
+          </div>
+          {% endif %}
+          <div class="form-check form-check-inline me-5">
+            <input class="form-check-input" type="radio" name="orderBy" id="location-order-button" value="LOCATION">
+            <label class="form-check-label" for="location-order-button">By location</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="descendOrder" id="descend-order-button" value="true">
+            <label class="form-check-label" for="descend-order-button">Reverse order</label>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline-primary" id="submit-button" type="submit">Query</button>
+    </form>
+  </div>
+</div>
+<div id="igv-div" class="mb-3 p-1 border">
+</div>
+<div class="collapse" id="alert-tip-region">
+  <div class="alert" id="alert-tip" role="alert">
+    Alert
+    <button type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+</div>
+
+<!-- bootstrap-table -->
+<table data-toggle="table" id="query-result-table" data-classes="table table-bordered table-striped" data-url="query_table" data-pagination="true" data-show-export="true" data-export-types='["json","xml","csv","txt"]' data-buttons-class="outline-secondary" data-icons='{"export":"fa-save"}' data-icons-prefix="fa">  <!-- data-show-columns="true" --->
+  <thead>
+    <tr>
+      {% if dataset == "QAPA" %}
+      <th data-field="id" data-formatter="geneWithInfoFormatter">APA ID</th>
+      <th data-field="gene_symbol">Symbol</th>
+      <th data-field="chrom">Chromo-<br>some</th>
+      <th data-field="strand">Strand</th>
+      <th data-field="last_exon_region">Last exon</th>
+      <th data-field="UTR3_region">3'UTR</th>
+      <th data-field="UTR3_terminal">APA site</th>
+      <th data-field="length">3'UTR<br>length</th>
+      <th data-field="expressed_case_count" data-formatter="numAndRatioFormatter">Expressed<br>in ? cases</th>
+      <th data-field="id" data-formatter="analyzeLinkFormatter">Plot</th>
+      {% else %}{# dataset == "DaPars" #}
+      <th data-field="id" data-formatter="geneWithInfoFormatter">Transcript ID</th> <!-- Hack: In DaPars dataset, APA ID column is used as transcript ID (NM_...). -->
+      <!-- <th data-field="gene_id">Gene</th> -->
+      <th data-field="gene_symbol">Symbol</th>
+      <th data-field="chrom">Chromo-<br>some</th>
+      <th data-field="strand">Strand</th>
+      <th data-field="UTR3_region">3'UTR</th>
+      <th data-field="truncation_site">Proximal APA</th>
+      <th data-field="UTR3_terminal">Distal APA</th>
+      <th data-field="length">Total<br>3'UTR<br>length</th>
+      <th data-field="truncation_length">Truncated<br>3'UTR<br>length</th>
+      <th data-field="expressed_case_count" data-formatter="numAndRatioFormatter">Have proximal<br>APA in ? cases</th>
+      <th data-field="id" data-formatter="analyzeLinkFormatter">Plot</th>
+      {% endif %}
+    </tr>
+  </thead>
+</table>
+
+<div class="modal fade" id="plot-window" data-bs-backdrop="static" tabindex="-1" aria-labelledby="plot-window-title" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="plot-window-title">Plot title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body ratio ratio-16x9">
+        <div id="plot-region"></div>
+      </div>
+      <!-- <div class="modal-footer"></div> -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block all_CSS %}
+{{ super() }}
+{{ deps.font_awesome() }}
+{{ deps.bootstrap_table_CSS() }}
+{% endblock %}
+
+{% block all_JS %}
+<!-- jQuery used by bootstrap-table -->
+{{ deps.jQuery() }}
+{{ super() }}
+{{ deps.bootstrap_table_JS() }}
+{{ deps.bootstrap_table_export_plugin() }}
+{# {{ deps.bootstrap_table_lang() }} #}
+{{ deps.plotly() }}
+{# {{ deps.plotly_lang() }} #}
+{{ deps.igvjs() }}
+<script>
+  // The popover HTML sanitizer config
+  var myDefaultAllowList = bootstrap.Tooltip.Default.allowList;
+  myDefaultAllowList.dl = [];
+  myDefaultAllowList.dt = [];
+  myDefaultAllowList.dd = [];
+
+  var bsCollapse = null;
+  var myModal = null;
+  var igv_browser = null;
+
+  function analyzeLinkFormatter(value, row, index) {
+    var summary_id;
+    {% if dataset == "QAPA" %}
+    summary_id = value;
+    {% else %}
+    summary_id = row.gene_id;
+    {% endif %}
+    var button1 = '<button type="button" class="btn lh-1 btn-link p-0 border-0 rounded-0 me-2" onclick="showSummaryPlotWindow()" data-analyze-apa-id="'+summary_id+'" title="Explore expression"><i class="fas fa-chart-bar"></i></button>';
+    var disabled = row.expressed_case_count >= {{ config.valid_case_min }} ? "" : "disabled";
+    var button2 = '<button type="button" class="btn lh-1 btn-link p-0 border-0 rounded-0" '+disabled+' onclick="showPlotWindow()" data-analyze-apa-id="'+value+'" data-analyze-gene-id="'+row.gene_id+'" title="PDUI-expression correlation analysis"><i class="fas fa-chart-line"></i></button>';
+    return button1+button2;
+  }
+
+  function geneWithInfoFormatter(value, row, index) {
+    {% if dataset == "QAPA" %}
+    if (value.split('_')[1] != '1')
+      return value;
+    {% endif %}
+    var button1 = '<a tabindex="0" class="btn lh-1 btn-link p-0 border-0 rounded-0 align-middle me-2" role="button" data-bs-toggle="popover" data-bs-placement="right" data-bs-html="true" data-bs-trigger="focus" data-bs-animation="true" title="Details of this gene" data-gene-id="'+{% if dataset == "QAPA" %}row.gene_id{% else %}value{% endif %}+'"><i class="fas fa-info"></i></a>';  // Effect of animation: to not disappear immediately when the NCBI link is clicked
+    var button2 = '<button type="button" class="btn lh-1 btn-link p-0 border-0 rounded-0 align-middle" onclick="searchGeneInViewer()" data-gene-id="'+row.gene_symbol+'" title="See this gene in viewer"><i class="fas fa-eye"></i></button>';
+    return '<span class="me-2">'+value+'</span>'+button1+button2;
+  }
+
+  function numAndRatioFormatter(value, row, index) {
+    return (value*100.0/{{ config.n_cases[dataset] }}).toPrecision(3)+'% ('+value.toString()+')';
+  }
+
+  function showPlotWindow() {
+    // event automatically passed in?
+    // event.currentTarget is the button
+    var APAID = $(event.currentTarget).data('analyzeApaId');  // data-* property names are changed like data-my-name -> myName
+    var geneID = $(event.currentTarget).data('analyzeGeneId');
+    $('#plot-window').data('plotType', 'correlation');
+    $('#plot-window').data('APAID', APAID);
+    $('#plot-window').data('geneID', geneID);
+    $('#plot-window-title').text('Correlation analysis between gene expression and PDUI: '+APAID);
+    myModal.show();
+    // Here the window is in animation (not fully shown), so plot loading should be in the shown event.
+  }
+
+  function showSummaryPlotWindow() {
+    var APAID = $(event.currentTarget).data('analyzeApaId');
+    $('#plot-window').data('plotType', 'expression');
+    $('#plot-window').data('APAID', APAID);
+    $('#plot-window-title').text('Expression of each leukemia types: '+APAID);
+    myModal.show();
+  }
+
+  function submitAdvancedQuery() {
+    // $('#submit-button').prop('disabled', true);
+    if ($('#ID-list-file-upload-input').val() == '') {
+      $('#query-result-table').bootstrapTable('refresh', {url: 'query_table?'+$('#APA-query-form').serialize()});
+    } else {
+      var formData = new FormData(event.target);
+      // formData.append('IDListFile', $('#ID-list-file-upload-input')[0].files[0]);
+      var options = {
+        url: 'query_table',
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        dataType: 'json'
+      };
+      $.ajax(options).done(function(data) {
+        $('#query-result-table').bootstrapTable('load', data);
+      }).fail(function(jqXHR) {
+        if (jqXHR.status == 200) {
+          $('#alert-tip').text('Error: Got corrupted data.');
+        } else {
+          $('#alert-tip').text('Error: '+JSON.parse(jqXHR.responseText).description);
+        }
+        $('#alert-tip').removeClass('alert-warning').addClass('alert-danger');
+        bsCollapse.show();
+      });
+      // $('#query-result-table').bootstrapTable('refreshOptions', {ajaxOptions:options});
+    }
+    return false;
+  }
+
+  function submitSimpleQuery() {
+    $('#query-result-table').bootstrapTable('refresh', {url: 'query_table_simple?'+$('#APA-simple-query-form').serialize()});
+    return false;
+  }
+
+  $(document).ready(function() {
+    bsCollapse = new bootstrap.Collapse($('#alert-tip-region')[0], {toggle: false});
+    myModal = new bootstrap.Modal($('#plot-window')[0], {keyboard: false});
+
+    $('#query-result-table').on('load-success.bs.table', function(e, data, status, jqXHR) {
+      if ($('#query-result-table').bootstrapTable('getOptions')['url'].indexOf('?') != -1 && data.length > {{ config.max_items }}) {
+        $('#alert-tip').removeClass('alert-danger').addClass('alert-warning');
+        $('#alert-tip').text('Warning: Count of matched records exceeds allowed maximum ({{ config.max_items }}). This server will return only the top {{ config.max_items+1 }} records. If you need other records, please specify more query condition to narrow the range, or use sorting to put your target records on the top.');
+        bsCollapse.show();
+      }
+      else {
+        bsCollapse.hide();
+      }
+      // $('#submit-button').prop('disabled', false);
+    });
+
+    $('#query-result-table').on('load-error.bs.table', function(e, status, jqXHR) {
+      if (status == 200) {
+        // Status code is correct but load failed
+        $('#alert-tip').text('Error: Got corrupted data.');
+      }
+      else {
+        $('#alert-tip').text('Error: '+JSON.parse(jqXHR.responseText).description);
+      }
+      $('#alert-tip').removeClass('alert-warning').addClass('alert-danger');
+      bsCollapse.show();
+      // $('#submit-button').prop('disabled', false);
+    });
+
+    $('#query-result-table').on('post-body.bs.table', function(e, data) {
+      // console.log($('#query-result-table [data-bs-toggle="popover"]').length);
+      $('#query-result-table [data-bs-toggle="popover"]').click(function(e) {
+        var btn = $(this);
+        btn.addClass('disabled');
+        $.ajax({
+          url: '/gene_detail',
+          data: {
+            ID: btn.data('geneId')
+          },
+          method: 'GET',
+          dataType: 'json'
+        }).done(function(data) {
+          btn.off(e);  // This click handler becomes unneeded after popover creation. To unbind this handler itself, pass the event in.
+          var c = [
+            ['Gene',data['full_name']],
+            ['Symbol',data['accession']],
+            ['Alias',data['alias']],
+            ['Type',data['gene_type']],
+            ['Location',data['location']],
+            ['Band',data['band']],
+            ['NCBI Gene','<a href="https://www.ncbi.nlm.nih.gov/gene/'+data['entrez']+'" target="_blank">'+data['entrez']+'</a>']
+            // ['APA','<a href="https://exon.apps.wistar.org/PolyA_DB/v3/" target="_blank">polyA DB 3</a>'],
+            // ['miRNA','<a href="http://www.targetscan.org/" target="_blank">TargetScan</a>'],
+            // ['RBP','<a href="http://rnabiology.ircm.qc.ca/oRNAment/search_by_transcripts/" target="_blank">oRNAment</a>']
+          ].map(function(l) {return '<dt>'+l[0]+'</dt><dd>'+l[1]+'</dd>';}).join('');
+          btn.popover({content:'<dl>'+c+'</dl>'}).popover('show');
+        });
+        btn.removeClass('disabled');
+      });
+    });
+
+    var plotted = false;
+    $('#plot-window').on('shown.bs.modal', function(e) {
+      var ajax_args;
+      if ($('#plot-window').data('plotType') == 'correlation') {
+        ajax_args = {
+          url: 'analysis_plot',
+          data: {
+            ID: $('#plot-window').data('APAID'),
+            geneID: $('#plot-window').data('geneID')
+          },
+          method: 'GET',
+          dataType: 'json'
+        };
+      } else {
+        console.assert($('#plot-window').data('plotType') == 'expression');
+        ajax_args = {
+          url: 'expression_summary_plot',
+          data: {
+            siteID: $('#plot-window').data('APAID')
+          },
+          method: 'GET',
+          dataType: 'json'
+        };
+      }
+      $.ajax(ajax_args).done(function(data) {
+        Plotly.newPlot($('#plot-region')[0], data['data'], data['layout'], {responsive: true}); // {locale: 'zh-CN'}
+        plotted = true;
+        // Plotly.react($('#plot-region')[0], data);
+      }).fail(function(jqXHR) {
+        if (jqXHR.status == 200) {
+          $('#plot-region').text('Error: Got corrupted data.');
+        } else {
+          $('#plot-region').text('Error: '+JSON.parse(jqXHR.responseText).description);
+        }
+        plotted = false;
+      });
+    });
+
+    $('#plot-window').on('hidden.bs.modal', function (e) {
+      if (plotted) {
+        Plotly.purge($('#plot-region')[0]);
+      }
+      $('#plot-region').empty();
+    });
+
+    $('#advanced-search-inputs').on('show.bs.collapse', function() {
+      $('#simple-search-button').prop('disabled', true);
+      $('#simple-search-input').prop('disabled', true);
+      $('#advanced-search-collapse-button').html('<i class="fas fa-angle-up"></i>')
+    });
+    $('#advanced-search-inputs').on('hide.bs.collapse', function() {
+      $('#simple-search-button').prop('disabled', false);
+      $('#simple-search-input').prop('disabled', false);
+      $('#advanced-search-collapse-button').html('<i class="fas fa-angle-down"></i>')
+    });
+    $('#chromosome-select').change(function() {
+      if ($('#chromosome-select').val() == '') {
+        $('#spatial-range-fieldset').prop('disabled', true);
+      } else {
+        $('#spatial-range-fieldset').prop('disabled', false);
+      }
+    });
+
+    var igv_options = {
+      genome: '{{ config.ref_genome[dataset] }}',
+      tracks: [
+      {% for item in ['PAS','RBP','targetScanS'] -%}
+      {
+        name: '{{ item }}',
+        type: 'annotation',
+        url: '/static/{{ config.ref_genome[dataset] }}_{{ item }}.bed.gz',
+        indexURL: '/static/{{ config.ref_genome[dataset] }}_{{ item }}.bed.gz.tbi',
+        color: 'red',
+        altColor: 'blue'
+      },
+      {% endfor %}
+      ]
+    };
+    igv.createBrowser($('#igv-div')[0], igv_options).then(function(browser) {
+      igv_browser = browser;
+    });
+  });
+  
+  function searchGeneInViewer() {
+    igv_browser.search($(event.currentTarget).data('geneId'));
+  }
+</script>
+{% endblock %}

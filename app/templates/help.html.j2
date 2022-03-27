@@ -1,0 +1,107 @@
+{% extends "base.html.j2" %}
+
+{% block title %}LeukAPA Help{% endblock %}
+
+{% block body %}
+<h3>Data format</h3>
+<h4>APA quantification data</h4>
+<h5>QAPA <a href="https://www.github.com/morrislab/qapa"><i class="fas fa-link"></i></a></h5>
+<dl class="row">
+	<dt class="col-2">APA_ID:</dt><dd class="col-10">unique identifier in the format "<code>&lt;Ensembl Gene ID&gt;_&lt;number&gt;_&lt;(P|D|S)&gt;</code>", P = proximal, D = distal, and S = single;</dd>
+	<dt class="col-2">Transcript:</dt><dd class="col-10">one or more Ensembl Transcript IDs</dd>
+	<dt class="col-2">Gene:</dt><dd class="col-10">Ensembl Gene ID</dd>
+	<dt class="col-2">Gene_Name:</dt><dd class="col-10">gene symbol</dd>
+	<dt class="col-2">Chr:</dt><dd class="col-10">chromosome</dd>
+	<dt class="col-2">LastExon.Start:</dt><dd class="col-10">start coordinate of last exon</dd>
+	<dt class="col-2">LastExon.End:</dt><dd class="col-10">end coordinate of last exon</dd>
+	<dt class="col-2">Strand:</dt><dd class="col-10">"<code>+</code>" or "<code>-</code>"</dd>
+	<dt class="col-2">UTR3.Start:</dt><dd class="col-10">start coordinate of 3' UTR</dd>
+	<dt class="col-2">UTR3.End:</dt><dd class="col-10">end coordinate of 3' UTR</dd>
+	<dt class="col-2">Length:</dt><dd class="col-10">length of the 3′ UTR</dd>
+	<dt class="col-2">Num_Events:</dt><dd class="col-10">number of PAS per gene</dd>
+	<dt class="col-2">*sample1*.PAU</dt><dd class="col-10">PolyA site Usage (PAU) estimate for *sample1*</dd>
+	<dt class="col-2">*sample1*.TPM</dt><dd class="col-10">TPM estimate for *sample1*</dd>
+</dl>
+<h6>Example:</h6>
+<p>File name: <code>QAPA_data.tsv</code></p>
+<img src="/static/QAPA_data_example.png" class="img-fluid mb-3" alt="QAPA data example">
+<h5>DaPars <a href="http://bioinfo.szbl.ac.cn/DaPars2/DaPars2.html"><i class="fas fa-link"></i></a></h5>
+<dl class="row">
+	<dt class="col-2">Gene:</dt><dd class="col-10">transcripts information in "<code>RefSeq_transcript_ID|gene_symbol|chromosome|strand</code>".</dd>
+	<dt class="col-2">Predicted_Proximal_APA:</dt><dd class="col-10">predicted proximal APA site by DaPars.</dd>
+	<dt class="col-2">Loci:</dt><dd class="col-10">the 3'UTR region of the transcript.</dd>
+	<dt class="col-2">Other columns</dt><dd class="col-10">the Percentage of Distal APA site Usage Index (PDUI) values of each sample calculated by DaPars.</dd>
+</dl>
+<h6>Example:</h6>
+<p>File name: <code>DaPars_data.tsv</code></p>
+<img src="/static/DaPars_data_example.png" class="img-fluid mb-3" alt="DaPars data example">
+<h4>gene/transcript expression data</h4>
+<p>Expression matrix needs to be imported as a textual file.</p>
+<p><b>Rows:</b> genes/transcripts using gene symbols/IDs as rows' names</p>
+<p><b>Columns:</b> expression values quantified in TPM format, each column represents a sample.</p>
+<h6>Example:</h6>
+<p>File name: <code>DaPars_expression.tsv</code></p>
+<img src="/static/DaPars_expression_example.png" class="img-fluid mb-3" alt="Expression data example">
+<h4>clinical data</h4>
+<p>Clinical information of samples should be imported as a textual file. Each row represents a sample and columns contain information like <code>age</code>, <code>gender</code>, <code>diagnosis</code>, survival data, and so on. The first column is sample IDs consistent with that in APA and expression data. Survival information should contain three columns including <code>vital_status</code>, <code>days_to_last_followup</code>, and <code>days_to_death</code>.</p>
+<h6>Example:</h6>
+<p>File name: <code>QAPA_clinical.tsv</code> or <code>DaPars_clinical.tsv</code></p>
+<img src="/static/clinical_example.png" class="img-fluid mb-3" alt="Clinical data example">
+<h3>Data import</h3>
+<ol>
+	<li>Install Python and other dependencies. Ensure APAview run correctly.</li>
+	<li>Prepare QAPA/DaPars (or both) tab-separated-value (tsv) data files according to the above guide. Put them in a directory e.g. <code>source_dir</code>.</li>
+	<li>Run <code>import_data.sh source_dir/</code> in the same environment (e.g. venv) of APAview.</li>
+	<li>The files <code>APA.sqlite</code> and <code>data.nc</code> should be generated in the current dir. Replace the original files in the software with them.</li>
+</ol>
+<h3>Query page</h3>
+<p>Click <span class="text-primary">Query</span> on the main menu, APAview shows query box, IGV tracks, and APA information of the imported data.</p>
+<p><b>APA data table:</b> Taking APA data quantified by DaPars as an example, APAview extracts APA information from original data and calculates 3'UTR length of transcripts formed by proximal/distal APA sites.</p>
+<ul>
+	<li>Click <i class="fas fa-info text-primary"></i> to display gene information.</li>
+	<li>Click <i class="fas fa-eye text-primary"></i> to quickly jump to the gene region and show gene structure and molecular features in IGV.</li>
+	<li>Click <i class="fas fa-chart-bar text-primary"></i> in "Plot" to show the boxplot of gene/transcript expression.</li>
+	<li>Click <i class="fas fa-chart-line text-primary"></i> in "Plot" to show the dot plots and regression lines of PDUI and gene/transcript expression.</li>
+</ul>
+<p>All plots are interactive and can be downloaded.</p>
+<b>Query box:</b>
+<ol>
+	<li>APA information could be searched using Ensembl IDs, gene symbols, regions on chromosomes, and gene set IDs from GO or KEGG.</li>
+	<li>Click <i class="fas fa-angle-down text-secondary"></i> for the Advanced search, users can <ul class="list-unstyled"><li>(a) choose location types for region search,</li><li>(b) limit displaying proximal/distal/single APA sites for QAPA data,</li><li>(c) upload a gene list file for APA search,</li><li>(d) adjust data sorts in the results table.</li></ul></li>
+</ol>
+<img src="/static/Query_page.png" class="img-fluid mb-3" alt="Query page">
+<p><b>IGV plots:</b> IGV plots display miRNA/RBP binding regions, APA motifs, APA sits, gene structures, and human hg19/hg38 genome information. The APA sites information is extracted from APA data after data import. Other motifs' positions are downloaded from the corresponding database (see Contact page for more information). Motifs are labeled in red for the "+" strand and blue for the "-" strand. The operation on IGV is the same as IGV software.</p>
+<img src="/static/igv_module.png" class="img-fluid mb-3" alt="IGV part">
+<h3>Query page</h3>
+<p>Click <span class="text-primary">Analysis</span> on the main menu, APAview does analyses for APA, expression, and clinical data in user-divided groups.</p>
+<b>Clinical data:</b>
+<ol>
+	<li>clinical data is shown in the "Case table".</li>
+	<li>All columns of the clinical data are stored in APAview and can be selected to show on the page by clicking <i class="fas fa-filter text-secondary"></i>.</li>
+</ol>
+<img src="/static/Analysis_page.png" class="img-fluid mb-3" alt="Analysis page">
+<p><b>Samples filtering and grouping:</b> In APAview, users can define groups to do analyses between groups on APA, expression, and clinical information.</p>
+<ol>
+	<li>APAview provides basic screening conditions for data filtering including case ID, disease type, gender, and age.</li>
+	<li>Filtering results show in "Case table" dynamically.</li>
+	<li>For samples grouping, firstly named your group and click <i class="fas fa-plus text-primary"></i>,</li>
+	<li>then choose samples</li>
+	<li>to add to corresponding groups.</li>
+	<li>Samples in different groups are labeled in different colors on "Case table".</li>
+</ol>
+<img src="/static/Analysis_steps.png" class="img-fluid mb-3" alt="Analysis steps">
+<p><b>Analyses:</b> After grouping of samples,</p>
+<ol>
+	<li>users can do differential analysis between user-defined groups for genes/transcripts expression of specified genes.</li>
+	<li>Interactively plots are shown in "Result".</li>
+	<li>According to density plots, shortening/lengthening of genes/transcripts between groups could be identified through mean values of PAU/PDUI.</li>
+	<li>Switching to the "Survival" analysis, all chosen samples will be divided into two groups according to the median value of PAU/PDUI.</li>
+	<li>Results of survival analysis are shown in KM-curves.</li>
+	<li>For two given genes, the "Correlation" analysis takes dot plots with regression lines as results to show the relationship of genes expression in selected samples.</li>
+</ol>
+{% endblock %}
+
+{% block all_CSS %}
+{{ super() }}
+{{ deps.font_awesome() }}
+{% endblock %}
