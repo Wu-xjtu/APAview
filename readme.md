@@ -118,7 +118,7 @@
 
    *example:*
 
-   ![image-20220328195442643](C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20220328195442643.png)
+   ![](img\image-20220328195442643.png)
 
    1.2 DaPars output (*http://bioinfo.szbl.ac.cn/DaPars2/DaPars2.html*)
 
@@ -131,7 +131,7 @@
 
    *example:*
 
-   ![image-20220328194812947](C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20220328194812947.png)
+   ![](img\image-20220328194812947.png)
 
 2. gene/transcription data
 
@@ -141,7 +141,7 @@
 
    *example:*
 
-   <img src="C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20220328195707846.png" alt="image-20220328195707846" style="zoom:80%;" />
+   ![](img\image-20220328195707846.png)
 
 3. clinical data
 
@@ -151,7 +151,7 @@
 
    *example:*
 
-   <img src="C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20220328194618437.png" alt="image-20220328194618437" style="zoom: 80%;" />
+   <img src="img\image-20220328194618437.png" style="zoom:80%;" />
 
 ## Data import
 
@@ -166,3 +166,4 @@
 ## Contact
 
 Emails for any comments, suggestions, questions, and bug reports of APAview are welcomed to send to Xiaoming Wu([wxm@mail.xjtu.edu.cn](mailto:wxm@mail.xjtu.edu.cn)).
+
