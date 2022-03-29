@@ -118,7 +118,7 @@
 
    *example:*
 
-   ![](img\image-20220328195442643.png)
+   ![]("img\image-20220328195442643.png")
 
    1.2 DaPars output (*http://bioinfo.szbl.ac.cn/DaPars2/DaPars2.html*)
 
@@ -141,7 +141,7 @@
 
    *example:*
 
-   ![](img\image-20220328195707846.png)
+   ![]("img\image-20220328195707846.png")
 
 3. clinical data
 
