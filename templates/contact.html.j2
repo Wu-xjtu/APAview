@@ -1,0 +1,49 @@
+{% extends "base.html.j2" %}
+
+{% block title %}Contact us{% endblock %}
+
+{% block body %}
+<style>
+	.contacttext {
+		text-align:center;
+	}
+	.box1 {
+		text-align: justify;
+	}
+	.box1 h3 {
+		background-color:rgba(201, 227, 251, 0.855);
+		border-radius: 10px;
+		padding: 0 5px
+	}
+</style>
+
+<div class="box1">
+	<h3>Contact us</h3>
+	<dl>
+		<dt>Address</dt><dd>No.28, West Xianning Road, Xi'an, Shaanxi, 710049, P.R. China</dd>
+		<dt>email</dt><dd><a href="mailto:wxm@mail.xjtu.edu.cn">wxm@mail.xjtu.edu.cn</a></dd>
+	</dl>
+</div>
+<div class="box1">
+	<h3>Sample data sources</h3>
+	<p><b>Acute Myelocytic Leukemia (AML):</b> 144 AML samples from TCGA. APA was quantified using DaPars and downloaded from TC3A database (Service Stopped). Gene expression data and clinical information were downloaded from TCGA GDC. The reference genome was hg19.</p>
+	<p><cite>Feng X, Li L, Wagner EJ, Li W. TC3A: The Cancer 3' UTR Atlas. Nucleic Acids Res. 2018 Jan 4;46(D1):D1027-D1030. doi: 10.1093/nar/gkx892. PMID: 30053266; PMCID: PMC5753254.</cite></p>
+	<p><b>Acute Promyelocytic Leukemia (APL):</b> RNA sequencing data of 323 APL patients was downloaded from GEO (GSE172057). Quantification of APA and transcript expression was done by QAPA using hg38 annotation. Clinical data was acquired from supplementary files of the paper.</p>
+	<p><cite>Lin X, Qiao N, Shen Y, Fang H, Xue Q, Cui B, Chen L, Zhu H, Zhang S, Chen Y, Jiang L, Wang S, Li J, Wang B, Chen B, Chen Z, Chen S. Integration of Genomic and Transcriptomic Markers Improves the Prognosis Prediction of Acute Promyelocytic Leukemia. Clin Cancer Res. 2021 Jul 1;27(13):3683-3694. doi: 10.1158/1078-0432.CCR-20-4375. Epub 2021 Apr 23. PMID: 33893160.</cite></p>
+	<h3>IGV showed data sources</h3>
+	<dl>
+		<dt>PolyA site signals</dt><dd>APAatlas database <a href="https://hanlab.uth.edu/apa/" target="_blank"><i class="fas fa-link"></i></a></dd>
+		<dt>MiRNA binding regions</dt><dd>TargetScanHuman 7.2 <a href="https://www.targetscan.org/vert_72/" target="_blank"><i class="fas fa-link"></i></a></dd>
+		<dt>RBP binding regions</dt><dd>ENCODE database <a href="https://www.encodeproject.org/" target="_blank"><i class="fas fa-link"></i></a></dd>
+	</dl>
+</div>
+<br>
+<div class="contacttext">
+	<p><strong>Copyright</strong> © Wu Lab, XJTU, China</p>
+</div>
+{% endblock %}
+
+{% block all_CSS %}
+{{ super() }}
+{{ deps.font_awesome() }}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html.j2" %}
+
+{% block title %}APAview{% endblock %}
+
+{% block body %}
+<style>
+	.box1 {
+		text-align: justify;
+	}
+	.box1 h3 {
+		background-color:rgba(201, 227, 251, 0.855);
+		border-radius: 10px;
+		padding: 0 5px
+	}
+	.contacttext {
+		text-align:center;
+		font-size
+	}
+	.textcenter {
+		width: 60%;
+		margin: auto;
+		border: 2px rgba(81, 128, 169, 0.855) dashed;
+		border-radius: 10px;
+		padding-left: 15px;
+		padding-right: 10px;
+		padding-top: 10px;
+		padding-bottom: 2px;
+	}
+</style>
+<div>
+	<div class="row">
+		<div class="col">
+			<div class="box1">
+				<h3>Introduction</h3>
+				<p><strong>Alternative cleavage and polyadenylation (APA)</strong> is an important post-transcriptional process for the transformation of precursor mRNA to mature mRNA. It is prevalent in more than 70% of genes in human cells and shows highly tissue and cell-type specific. APA sites alternation has been found to associate with human hematological, immunological, and neurological diseases, as well as cancers. It always occurs in the 3' untranslated region (3'UTR) and changes 3'UTR length, thereby affecting mRNA stability, transcription efficiency, subcellular localization, and subsequent protein localization and function. APA provides a new perspective for the occurrence, progression, and treatment of human complex diseases. However, there are still few studies on the APA landscape in hematological tumors.</p>
+				<p>Here we present <strong>APAview</strong>, a web-based platform for APA features exploration in hematological tumors, to analyze APA quantification data from QAPA/DaPars.</p>
+				<p><strong>Taking APA, gene/transcript expression, and clinical information as input, APAview could:</strong></p>
+				<ol>
+					<li>provide <em>correlation analysis</em> between APA usage index and gene/transcript expression;</li>
+					<li>provide <em>differential analysis</em> of APA usage index or other features among groups;</li>
+					<li>identify genes with <em>shortened/lengthened 3’UTR</em> between groups;</li>
+					<li>provide <em>survival analysis</em> based on APA usage index;</li>
+					<li><em>annotate</em> genes and APA sites using databases such as NCBI and polyA DB;</li>
+					<li>visualize <em>gene structures</em>, <em>APA sites</em>, <em>miRNA</em>, <em>RBP</em>, and <em>APA motifs</em> in IGV plots.</li>
+				</ol>
+			</div>
+		</div>
+		<div class="col-4 d-flex align-items-center">
+			<img src="/static/APA_example_small.png" class="img-fluid" alt="APA diagram">
+		</div>
+	</div>
+</div>
+<br>
+<div class="contacttext">
+	<p><strong>Copyright</strong> © Wu Lab, XJTU, China</p>
+</div>
+{% endblock %}
