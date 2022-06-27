@@ -41,8 +41,10 @@ from plotly.subplots import make_subplots
 plotly_colors = px.colors.qualitative.Plotly
 
 import statsmodels.api as sm
-from statsmodels.stats.weightstats import ttest_ind
-from statsmodels.stats.oneway import anova_oneway
+# from statsmodels.stats.weightstats import ttest_ind
+from scipy.stats import mannwhitneyu
+# from statsmodels.stats.oneway import anova_oneway
+from scipy.stats import kruskal
 
 # Debug imports
 # import pickle
@@ -740,7 +742,8 @@ def DE_analysis_plot(dataset):
 			assert i1 == i2
 			g1.dropna(inplace=True)
 			g2.dropna(inplace=True)
-			tstat, p, dof = ttest_ind(g1, g2)
+			# tstat, p, dof = ttest_ind(g1, g2)
+			tstat, p = mannwhitneyu(g1, g2)
 			if math.isfinite(p):
 				tag = "<b>{}</b><br>(p={:.4f})".format(star_symbol(p), p)
 				if i1.endswith(suffix):
@@ -756,7 +759,9 @@ def DE_analysis_plot(dataset):
 			names = [c[0] for c in cols]
 			values = [c[1] for c in cols]
 			assert all(n == names[0] for n in names[1:])
-			result = anova_oneway([a.dropna() for a in values], use_var="equal")
+			# result = anova_oneway([a.dropna() for a in values], use_var="equal")
+			values = [a.dropna() for a in values]
+			result = kruskal(*values)
 			if math.isfinite(result.pvalue):
 				tag = "<b>{}</b><br>(p={:.4f})".format(star_symbol(result.pvalue), result.pvalue)
 				if names[0].endswith(suffix):
