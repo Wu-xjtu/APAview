@@ -436,7 +436,7 @@
     var igv_options = {
       genome: '{{ config.ref_genome[dataset] }}',
       tracks: [
-      {% for item in ['PAS','RBP','targetScanS'] -%}
+      {% for item in ['APAsites','PAS','RBP','targetScanS','UTR3'] -%}
       {
         name: '{{ item }}',
         type: 'annotation',
